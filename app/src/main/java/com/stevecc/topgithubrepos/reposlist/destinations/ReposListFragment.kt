@@ -1,11 +1,19 @@
 package com.stevecc.topgithubrepos.reposlist.destinations
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.stevecc.topgithubrepos.R
+import com.stevecc.topgithubrepos.api.search.Repository
+import com.stevecc.topgithubrepos.databinding.RepositoryListItemBinding
 import com.stevecc.topgithubrepos.databinding.TopReposListFragmentBinding
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect
 import com.stevecc.topgithubrepos.reposlist.Intent
@@ -19,6 +27,9 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
  */
 class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
     private val reposListViewModel: ReposListViewModel by hiltNavGraphViewModels(R.id.main_graph)
+    private val repositoryAdapter = RepositoryAdapter().apply {
+        setHasStableIds(true)
+    }
 
     private lateinit var views: TopReposListFragmentBinding
     private val compositeDisposable = CompositeDisposable()
@@ -29,6 +40,13 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
     ) {
         super.onViewCreated(view, savedInstanceState)
         views = TopReposListFragmentBinding.bind(view)
+
+        views.repoRecyclerView.layoutManager = LinearLayoutManager(
+            requireContext(), RecyclerView.VERTICAL, false)
+        views.repoRecyclerView.addItemDecoration(
+            DividerItemDecoration(context, RecyclerView.VERTICAL)
+        )
+        views.repoRecyclerView.adapter = repositoryAdapter
     }
 
     override fun onStart() {
@@ -62,37 +80,37 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
                 views.loadingView.isVisible = false
                 views.errorView.isVisible = false
                 views.emptyView.isVisible = false
-                views.contentView.isVisible = false
+                views.repoRecyclerView.isVisible = false
             }
             State.Loading -> {
                 // display loading state
                 views.loadingView.isVisible = true
                 views.errorView.isVisible = false
                 views.emptyView.isVisible = false
-                views.contentView.isVisible = false
+                views.repoRecyclerView.isVisible = false
             }
             is State.Error -> {
                 // display error state
                 views.loadingView.isVisible = false
                 views.errorView.isVisible = true
                 views.emptyView.isVisible = false
-                views.contentView.isVisible = false
+                views.repoRecyclerView.isVisible = false
             }
             is State.Content.Empty -> {
                 // display empty state
                 views.loadingView.isVisible = false
                 views.errorView.isVisible = false
                 views.emptyView.isVisible = true
-                views.contentView.isVisible = false
-                views.emptyView.text = "No repositories were found"
+                views.repoRecyclerView.isVisible = false
+                views.emptyView.text = getString(R.string.repository_list_empty)
             }
             is State.Content.RepositoryList -> {
                 // display content state
                 views.loadingView.isVisible = false
                 views.errorView.isVisible = false
                 views.emptyView.isVisible = false
-                views.contentView.isVisible = true
-                views.contentView.text = "Repositories found: ${state.repositoryList.size}"
+                views.repoRecyclerView.isVisible = true
+                repositoryAdapter.setRepositories(state.repositoryList)
             }
         }
     }
@@ -105,5 +123,44 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
             // TODO: handle effects
             else -> Unit
         }
+    }
+}
+
+private class RepositoryAdapter: RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
+    private val items: MutableList<Repository> = emptyList<Repository>().toMutableList()
+
+    class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
+        var views: RepositoryListItemBinding = RepositoryListItemBinding.bind(view)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.repository_list_item, parent, false)
+
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val repository = items[position]
+
+        holder.views.repositoryNameLabel.text = repository.full_name
+
+        // TODO: show stars
+        // TODO: show top contributor
+        // TODO: Trigger fetch of top contributor
+    }
+
+    override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int): Long {
+        return items[position].id.toLong()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun setRepositories(repositoryList: List<Repository>) {
+        items.clear()
+        items.addAll(repositoryList)
+        // Because we're replacing the entire adapter, it's expected to notify that all items were changed for now.
+        notifyDataSetChanged()
     }
 }

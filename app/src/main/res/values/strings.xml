@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Top GitHub Repos</string>
+    <string name="repository_list_empty">No repositories were found</string>
 </resources>

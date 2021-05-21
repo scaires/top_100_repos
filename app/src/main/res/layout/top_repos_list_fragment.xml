@@ -34,13 +34,15 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Empty" />
 
-    <TextView
-        android:id="@+id/content_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/repo_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Content" />
+        tools:listitem="@layout/repository_list_item" />
 </androidx.constraintlayout.widget.ConstraintLayout>
