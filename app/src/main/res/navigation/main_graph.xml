@@ -7,6 +7,6 @@
 
     <fragment
         android:id="@+id/repos_list"
-        android:name="com.stevecc.topgithubrepos.reposlist.ReposListFragment"
+        android:name="com.stevecc.topgithubrepos.reposlist.destinations.ReposListFragment"
         tools:layout="@layout/top_repos_list_fragment" />
 </navigation>
