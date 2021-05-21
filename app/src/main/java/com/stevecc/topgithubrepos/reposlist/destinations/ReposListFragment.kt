@@ -2,22 +2,23 @@ package com.stevecc.topgithubrepos.reposlist.destinations
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import com.stevecc.topgithubrepos.R
-import com.stevecc.topgithubrepos.api.search.SearchService
 import com.stevecc.topgithubrepos.databinding.TopReposListFragmentBinding
-import dagger.hilt.android.AndroidEntryPoint
+import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect
+import com.stevecc.topgithubrepos.reposlist.Intent
+import com.stevecc.topgithubrepos.reposlist.ReposListViewModel
+import com.stevecc.topgithubrepos.reposlist.State
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import javax.inject.Inject
 
 /*
  * Fragment displaying a list of GitHub repositories and the top contributor.
  */
-@AndroidEntryPoint
 class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
-    @Inject
-    lateinit var searchService: SearchService
+    private val reposListViewModel: ReposListViewModel by hiltNavGraphViewModels(R.id.main_graph)
 
     private lateinit var views: TopReposListFragmentBinding
     private val compositeDisposable = CompositeDisposable()
@@ -32,17 +33,69 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
 
     override fun onStart() {
         super.onStart()
-        compositeDisposable.add(searchService.repositories(searchQuery = "stars:>0")
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    // Success
-                    views.label.text = "Repos: ${it.total_count}"
-                },
-                {
-                    // Error
-                    views.label.text = "Error loading repos: ${it.message}"
-                }
-            ))
+
+        with(compositeDisposable) {
+            add(reposListViewModel.states()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(::render))
+
+            add(reposListViewModel.effects()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(::handleEffects))
+        }
+
+        reposListViewModel.accept(Intent.Startup)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.clear()
+    }
+
+    /*
+     * Render the State into a representation for this View
+     */
+    private fun render(state: State) {
+        when (state) {
+            State.Initial -> {
+                // display nothing
+                views.loadingView.isVisible = false
+                views.errorView.isVisible = false
+                views.emptyView.isVisible = false
+                views.contentView.isVisible = false
+            }
+            State.Loading -> {
+                // display loading state
+                views.loadingView.isVisible = true
+                views.errorView.isVisible = false
+                views.emptyView.isVisible = false
+                views.contentView.isVisible = false
+            }
+            is State.Error -> {
+                // display error state
+                views.loadingView.isVisible = false
+                views.errorView.isVisible = true
+                views.emptyView.isVisible = false
+                views.contentView.isVisible = false
+            }
+            is State.Content -> {
+                // display content state
+                views.loadingView.isVisible = false
+                views.errorView.isVisible = false
+                views.emptyView.isVisible = true
+                views.contentView.isVisible = false
+                views.contentView.text = getString(R.string.app_name)
+            }
+        }
+    }
+
+    /*
+     * Handle any transient Effects relevant to this View
+     */
+    private fun handleEffects(effect: Effect) {
+        when (effect) {
+            // TODO: handle effects
+            else -> Unit
+        }
     }
 }
