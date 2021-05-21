@@ -78,13 +78,21 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
                 views.emptyView.isVisible = false
                 views.contentView.isVisible = false
             }
-            is State.Content -> {
-                // display content state
+            is State.Content.Empty -> {
+                // display empty state
                 views.loadingView.isVisible = false
                 views.errorView.isVisible = false
                 views.emptyView.isVisible = true
                 views.contentView.isVisible = false
-                views.contentView.text = getString(R.string.app_name)
+                views.emptyView.text = "No repositories were found"
+            }
+            is State.Content.RepositoryList -> {
+                // display content state
+                views.loadingView.isVisible = false
+                views.errorView.isVisible = false
+                views.emptyView.isVisible = false
+                views.contentView.isVisible = true
+                views.contentView.text = "Repositories found: ${state.repositoryList.size}"
             }
         }
     }

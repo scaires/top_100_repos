@@ -9,7 +9,6 @@ import com.jakewharton.rxrelay3.PublishRelay
 import com.stevecc.topgithubrepos.api.search.Repository
 import com.stevecc.topgithubrepos.api.search.RepositoryResults
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Change
-import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Change.Loading
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect
 import com.stevecc.topgithubrepos.reposlist.Intent.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -102,10 +101,16 @@ class ReposListViewModel @Inject constructor(
     private fun map(intent: Intent): Observable<ChangeOrEffect> {
         return when (intent) {
             Startup -> {
-                // TODO: call through to ReposListModel
-                return Observable.just(Loading)
+                reposListModel.topRepositories()
+                    .toObservable()
+                    .map<ChangeOrEffect> {
+                        Change.RepositoryListLoaded(it)
+                    }
+                    .startWithItem(Change.Loading)
+                    .onErrorReturn {
+                        Change.Error(it)
+                    }
             }
-            else -> Observable.empty()
         }
     }
 
@@ -118,8 +123,37 @@ class ReposListViewModel @Inject constructor(
             is Effect -> previousState.also { effectsRelay.accept(change) }
             is Change -> {
                 when (previousState) {
-                    // TODO: enumerate States
-                    else -> State.Loading
+                    State.Initial,
+                    State.Loading,
+                    is State.Content -> {
+                        when (change) {
+                            is Change.Loading -> {
+                                State.Loading
+                            }
+                            is Change.RepositoryListLoaded -> {
+                                if (change.repositoryResults.items.isEmpty()) {
+                                    State.Content.Empty
+                                } else {
+                                    State.Content.RepositoryList(
+                                        repositoryList = change.repositoryResults.items
+                                    )
+                                }
+                            }
+                            is Change.Error -> {
+                                State.Error(errorMessage = change.throwable.message)
+                            }
+                        }
+                    }
+                    is State.Error -> {
+                        when (change) {
+                            is Change.Loading -> {
+                                State.Loading
+                            }
+                            else -> {
+                                previousState
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -140,7 +174,7 @@ sealed class ChangeOrEffect {
     sealed class Change : ChangeOrEffect() {
         object Loading: Change()
         data class Error(val throwable: Throwable): Change()
-        data class RepositoryListLoaded(val repositoryResults: RepositoryResults)
+        data class RepositoryListLoaded(val repositoryResults: RepositoryResults): Change()
     }
 
     sealed class Effect: ChangeOrEffect() {

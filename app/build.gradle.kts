@@ -40,6 +40,11 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    testOptions {
+        // Allows mocking of some android SDK methods (like Log.x)
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -77,4 +82,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.2")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    // Mockito (unit testing)
+    testImplementation("org.mockito:mockito-core:3.6.28")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("org.mockito:mockito-inline:2.13.0")
 }
