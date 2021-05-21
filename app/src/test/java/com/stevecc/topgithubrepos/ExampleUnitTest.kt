@@ -1,4 +1,4 @@
-package com.example.topgithubrepos
+package com.stevecc.topgithubrepos
 
 import org.junit.Test
 
