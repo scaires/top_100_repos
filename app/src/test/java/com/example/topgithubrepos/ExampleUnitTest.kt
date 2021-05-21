@@ -1,4 +1,4 @@
-package com.example.top100repos
+package com.example.topgithubrepos
 
 import org.junit.Test
 
