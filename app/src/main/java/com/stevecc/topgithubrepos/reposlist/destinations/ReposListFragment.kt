@@ -145,9 +145,16 @@ private class RepositoryAdapter: RecyclerView.Adapter<RepositoryAdapter.ViewHold
 
         holder.views.repositoryNameLabel.text = repository.full_name
 
-        // TODO: show stars
-        // TODO: show top contributor
-        // TODO: Trigger fetch of top contributor
+        holder.views.repositoryStars.text = "${repository.stargazers_count}"
+        // If no top contributor available, show progress bar
+        if (false) {
+            holder.views.repositoryTopContributor.isVisible = true
+            holder.views.repositoryTopContributorProgress.isVisible = false
+            // TODO: Trigger fetch of top contributor
+        } else {
+            holder.views.repositoryTopContributor.isVisible = false
+            holder.views.repositoryTopContributorProgress.isVisible = true
+        }
     }
 
     override fun getItemCount() = items.size

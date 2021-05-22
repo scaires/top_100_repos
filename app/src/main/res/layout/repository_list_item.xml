@@ -1,17 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_marginBottom="@dimen/grid_spacing"
+    android:layout_marginEnd="@dimen/grid_margin"
+    android:layout_marginStart="@dimen/grid_margin"
+    android:layout_marginTop="@dimen/grid_spacing">
 
+    <!-- Repository Name -->
     <TextView
         android:id="@+id/repository_name_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textAppearance="?textAppearanceHeadline6"
+        android:layout_marginBottom="@dimen/grid_spacing"
+        app:layout_constraintBottom_toTopOf="@id/repository_stars_label"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Repository name" />
+
+    <!-- Stars Label -->
+    <TextView
+        android:id="@+id/repository_stars_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/grid_spacing_small"
+        android:textAppearance="?textAppearanceBody1"
+        android:text="@string/repository_item_stars_label"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toTopOf="@id/repository_top_contributor_label"
+        app:layout_constraintEnd_toStartOf="@+id/repository_stars"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/repository_name_label" />
+
+    <!-- Stars Value -->
+    <TextView
+        android:id="@+id/repository_stars"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/grid_spacing_small"
+        android:textAppearance="?textAppearanceBody1"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toBottomOf="@id/repository_stars_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/repository_stars_label"
+        app:layout_constraintTop_toTopOf="@id/repository_stars_label"
+        tools:text="100" />
+
+    <!-- Top Contributor Label -->
+    <TextView
+        android:id="@+id/repository_top_contributor_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/repository_item_top_contributor_label"
+        android:textAppearance="?textAppearanceBody1"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/repository_stars_label" />
+
+    <!-- Top Contributor Progress -->
+    <ProgressBar
+        android:id="@+id/repository_top_contributor_progress"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginStart="@dimen/grid_spacing_small"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toBottomOf="@id/repository_top_contributor_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/repository_top_contributor_label"
+        app:layout_constraintTop_toTopOf="@id/repository_top_contributor_label" />
+
+    <!-- Top Contributor  -->
+    <TextView
+        android:id="@+id/repository_top_contributor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/grid_spacing_small"
+        android:textAppearance="?textAppearanceBody1"
+        android:textStyle="italic"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toBottomOf="@id/repository_top_contributor_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/repository_top_contributor_label"
+        app:layout_constraintTop_toTopOf="@id/repository_top_contributor_label"
+        tools:text="owner" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

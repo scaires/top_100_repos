@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Top GitHub Repos</string>
     <string name="repository_list_empty">No repositories were found</string>
+    <string name="repository_item_stars_label">Stars:</string>
+    <string name="repository_item_top_contributor_label">Top contributor:</string>
 </resources>
