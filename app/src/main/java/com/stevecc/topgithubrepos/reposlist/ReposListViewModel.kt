@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.jakewharton.rxrelay3.BehaviorRelay
 import com.jakewharton.rxrelay3.PublishRelay
+import com.stevecc.topgithubrepos.api.repository.Contributor
 import com.stevecc.topgithubrepos.api.search.Repository
 import com.stevecc.topgithubrepos.api.search.RepositoryResults
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Change
@@ -111,6 +112,16 @@ class ReposListViewModel @Inject constructor(
                         Change.Error(it)
                     }
             }
+            is FetchTopContributorForRepository -> {
+                reposListModel.topContributorForRepository(intent.repository)
+                    .toObservable()
+                    .map<ChangeOrEffect> {
+                        Effect.TopContributorLoaded(repositoryId = intent.repository.id, topContributor = it)
+                    }
+                    .onErrorReturn {
+                        Effect.ErrorLoadingContributor(it)
+                    }
+            }
         }
     }
 
@@ -165,6 +176,7 @@ class ReposListViewModel @Inject constructor(
  */
 sealed class Intent {
     object Startup: Intent()
+    data class FetchTopContributorForRepository(val repository: Repository): Intent()
 }
 
 /*
@@ -178,7 +190,8 @@ sealed class ChangeOrEffect {
     }
 
     sealed class Effect: ChangeOrEffect() {
-        // TODO: Add Effects (eg, navigation)
+        data class TopContributorLoaded(val repositoryId: Int, val topContributor: Contributor): Effect()
+        data class ErrorLoadingContributor(val error: Throwable) : Effect()
     }
 }
 

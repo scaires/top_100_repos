@@ -11,11 +11,14 @@ import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.jakewharton.rxrelay3.PublishRelay
 import com.stevecc.topgithubrepos.R
+import com.stevecc.topgithubrepos.api.repository.Contributor
 import com.stevecc.topgithubrepos.api.search.Repository
 import com.stevecc.topgithubrepos.databinding.RepositoryListItemBinding
 import com.stevecc.topgithubrepos.databinding.TopReposListFragmentBinding
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect
+import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect.TopContributorLoaded
 import com.stevecc.topgithubrepos.reposlist.Intent
 import com.stevecc.topgithubrepos.reposlist.ReposListViewModel
 import com.stevecc.topgithubrepos.reposlist.State
@@ -25,11 +28,13 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 /*
  * Fragment displaying a list of GitHub repositories and the top contributor.
  */
-class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
+class ReposListFragment : Fragment(R.layout.top_repos_list_fragment),
+    RepositoryAdapter.IntentsTarget {
     private val reposListViewModel: ReposListViewModel by hiltNavGraphViewModels(R.id.main_graph)
-    private val repositoryAdapter = RepositoryAdapter().apply {
+    private val repositoryAdapter = RepositoryAdapter(this).apply {
         setHasStableIds(true)
     }
+    private val intentsPublishRelay = PublishRelay.create<Intent>()
 
     private lateinit var views: TopReposListFragmentBinding
     private val compositeDisposable = CompositeDisposable()
@@ -60,6 +65,10 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
             add(reposListViewModel.effects()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(::handleEffects))
+
+            add(intentsPublishRelay
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(reposListViewModel::accept))
         }
 
         reposListViewModel.accept(Intent.Startup)
@@ -68,6 +77,10 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
     override fun onStop() {
         super.onStop()
         compositeDisposable.clear()
+    }
+
+    override fun onIntent(intent: Intent) {
+        intentsPublishRelay.accept(intent)
     }
 
     /*
@@ -120,14 +133,23 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment) {
      */
     private fun handleEffects(effect: Effect) {
         when (effect) {
-            // TODO: handle effects
+            is TopContributorLoaded -> {
+                repositoryAdapter.setTopContributor(effect.repositoryId, effect.topContributor)
+            }
+            // TODO: handle error loading top contributor case (clear progress) - eg in case of rate limiting.
             else -> Unit
         }
     }
 }
 
-private class RepositoryAdapter: RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
+private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
     private val items: MutableList<Repository> = emptyList<Repository>().toMutableList()
+    private val topContributorsMap = emptyMap<Int, Contributor>().toMutableMap()
+    private val repositoryIdToPositionMap = emptyMap<Int, Int>().toMutableMap()
+
+    interface IntentsTarget {
+        fun onIntent(intent: Intent)
+    }
 
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
         var views: RepositoryListItemBinding = RepositoryListItemBinding.bind(view)
@@ -147,13 +169,15 @@ private class RepositoryAdapter: RecyclerView.Adapter<RepositoryAdapter.ViewHold
 
         holder.views.repositoryStars.text = "${repository.stargazers_count}"
         // If no top contributor available, show progress bar
-        if (false) {
+        if (topContributorsMap.containsKey(repository.id)) {
             holder.views.repositoryTopContributor.isVisible = true
             holder.views.repositoryTopContributorProgress.isVisible = false
-            // TODO: Trigger fetch of top contributor
+            holder.views.repositoryTopContributor.text = topContributorsMap[repository.id]!!.login
         } else {
             holder.views.repositoryTopContributor.isVisible = false
             holder.views.repositoryTopContributorProgress.isVisible = true
+            // Trigger a fetch of the top contributor for the repository
+            intentsTarget.onIntent(Intent.FetchTopContributorForRepository(repository))
         }
     }
 
@@ -166,8 +190,17 @@ private class RepositoryAdapter: RecyclerView.Adapter<RepositoryAdapter.ViewHold
     @SuppressLint("NotifyDataSetChanged")
     fun setRepositories(repositoryList: List<Repository>) {
         items.clear()
+        repositoryList.forEach {
+            items.add(it)
+            repositoryIdToPositionMap[it.id] = items.size - 1
+        }
         items.addAll(repositoryList)
         // Because we're replacing the entire adapter, it's expected to notify that all items were changed for now.
         notifyDataSetChanged()
+    }
+
+    fun setTopContributor(repositoryId: Int, topContributor: Contributor) {
+        topContributorsMap[repositoryId] = topContributor
+        repositoryIdToPositionMap[repositoryId]?.let { notifyItemChanged(it) }
     }
 }
