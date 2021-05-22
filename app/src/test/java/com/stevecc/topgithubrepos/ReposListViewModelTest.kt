@@ -62,7 +62,7 @@ class ReposListViewModelTest {
         reposListViewModel = ReposListViewModel(reposListModel = reposListModel,
             savedState = savedState)
 
-        whenever(reposListModel.topRepositories()).doReturn(Single.just(REPOSITORY_RESULTS))
+        whenever(reposListModel.top100Repositories()).doReturn(Single.just(REPOSITORY_RESULTS))
     }
 
     @Test
@@ -77,7 +77,7 @@ class ReposListViewModelTest {
     @Test
     fun emitsLoadingAndEmptyContentState() {
         whenever(savedState.get<State>(ArgumentMatchers.anyString())).thenReturn(null)
-        whenever(reposListModel.topRepositories()).doReturn(Single.just(EMPTY_RESULTS))
+        whenever(reposListModel.top100Repositories()).doReturn(Single.just(EMPTY_RESULTS))
 
         val states = reposListViewModel.states().test()
         reposListViewModel.accept(Intent.Startup)
@@ -86,7 +86,7 @@ class ReposListViewModelTest {
             State.Loading,
             State.Content.Empty)
 
-        verify(reposListModel, times(1)).topRepositories()
+        verify(reposListModel, times(1)).top100Repositories()
     }
 
     @Test
@@ -100,13 +100,13 @@ class ReposListViewModelTest {
             State.Loading,
             State.Content.RepositoryList(REPOSITORY_LIST))
 
-        verify(reposListModel, times(1)).topRepositories()
+        verify(reposListModel, times(1)).top100Repositories()
     }
 
     @Test
     fun emitsErrorState() {
         whenever(savedState.get<State>(ArgumentMatchers.anyString())).thenReturn(null)
-        whenever(reposListModel.topRepositories()).doReturn(Single.error(NOT_FOUND_ERROR))
+        whenever(reposListModel.top100Repositories()).doReturn(Single.error(NOT_FOUND_ERROR))
 
         val states = reposListViewModel.states().test()
         reposListViewModel.accept(Intent.Startup)
@@ -115,6 +115,6 @@ class ReposListViewModelTest {
             State.Loading,
             State.Error(NOT_FOUND_ERROR.message))
 
-        verify(reposListModel, times(1)).topRepositories()
+        verify(reposListModel, times(1)).top100Repositories()
     }
 }

@@ -15,7 +15,7 @@ class ReposListModel @Inject constructor(
         const val TOP_REPOS_SORTED_BY_STARS_QUERY = "stars:>0"
     }
 
-    fun topRepositories(): Single<RepositoryResults> {
-        return searchService.repositories(TOP_REPOS_SORTED_BY_STARS_QUERY)
+    fun top100Repositories(): Single<RepositoryResults> {
+        return searchService.repositories(searchQuery = TOP_REPOS_SORTED_BY_STARS_QUERY, perPageCount = 100)
     }
 }

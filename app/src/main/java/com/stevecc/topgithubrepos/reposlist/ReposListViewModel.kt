@@ -101,7 +101,7 @@ class ReposListViewModel @Inject constructor(
     private fun map(intent: Intent): Observable<ChangeOrEffect> {
         return when (intent) {
             Startup -> {
-                reposListModel.topRepositories()
+                reposListModel.top100Repositories()
                     .toObservable()
                     .map<ChangeOrEffect> {
                         Change.RepositoryListLoaded(it)

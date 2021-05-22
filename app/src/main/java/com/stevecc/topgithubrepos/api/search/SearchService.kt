@@ -15,5 +15,8 @@ interface SearchService {
 
     // https://docs.github.com/en/rest/reference/search#search-repositories
     @GET("${BASE_URL}/repositories")
-    fun repositories(@Query("q") searchQuery: String): Single<RepositoryResults>
+    fun repositories(
+        @Query("q") searchQuery: String,
+        @Query("per_page") perPageCount: Int
+    ): Single<RepositoryResults>
 }
