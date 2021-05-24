@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
@@ -172,7 +173,37 @@ private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): R
         if (topContributorsMap.containsKey(repository.id)) {
             holder.views.repositoryTopContributor.isVisible = true
             holder.views.repositoryTopContributorProgress.isVisible = false
-            holder.views.repositoryTopContributor.text = topContributorsMap[repository.id]!!.first().login
+
+            val topContributors = topContributorsMap[repository.id]!!
+
+            with(holder.views.repositoryTopContributor) {
+                doOnLayout {
+                    // get width of view from layoutlistener
+                    val textViewWidth = it.width
+                    var numberOfContributorsSuccessfullyTested = 0
+                    var textToMeasure: String
+                    var topContributorTextWidth: Float
+                    var contributorsToTest: Int
+                    // Progressively test longer and longer lengths of contributor strings
+                    // When one exceeds the bounds of the view, break (to use the previously successful string)
+                    for ((index) in topContributors.withIndex()) {
+                        contributorsToTest = index + 1
+                        textToMeasure = topContributorsStringWithOverflow(topContributors, contributorsToTest)
+                        topContributorTextWidth = holder.views.repositoryTopContributor.paint.measureText(textToMeasure)
+
+                        if (topContributorTextWidth < textViewWidth) {
+                            // if measuretext of contributors is less than total length, it can be displayed
+                            numberOfContributorsSuccessfullyTested = contributorsToTest
+                        } else {
+                            // otherwise, we cannot display this number of controbutors
+                            break
+                        }
+                    }
+
+                    // TODO: better handling for the edge case where numberOfContributorsSuccessfullyTested is zero
+                    text = topContributorsStringWithOverflow(topContributors, numberOfContributorsSuccessfullyTested)
+                }
+            }
         } else {
             holder.views.repositoryTopContributor.isVisible = false
             holder.views.repositoryTopContributorProgress.isVisible = true
@@ -201,5 +232,27 @@ private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): R
     fun setTopContributors(repositoryId: Int, topContributors: List<Contributor>) {
         topContributorsMap[repositoryId] = topContributors
         repositoryIdToPositionMap[repositoryId]?.let { notifyItemChanged(it) }
+    }
+
+    private fun topContributorsStringWithOverflow(allContributors: List<Contributor>, numContributorsToDisplay: Int): String {
+        val stringBuilder = StringBuilder()
+
+        if (numContributorsToDisplay == 0) {
+            stringBuilder.append("${allContributors.size} contributors")
+            return stringBuilder.toString()
+        }
+
+        allContributors.take(numContributorsToDisplay).withIndex().forEach {
+            if (it.index > 0) {
+                stringBuilder.append(", ")
+            }
+            stringBuilder.append(it.value.login)
+        }
+
+        if (numContributorsToDisplay < allContributors.size) {
+            stringBuilder.append(" and ${allContributors.size - numContributorsToDisplay} more")
+        }
+
+        return stringBuilder.toString()
     }
 }
