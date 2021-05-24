@@ -194,7 +194,6 @@ private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): R
             items.add(it)
             repositoryIdToPositionMap[it.id] = items.size - 1
         }
-        items.addAll(repositoryList)
         // Because we're replacing the entire adapter, it's expected to notify that all items were changed for now.
         notifyDataSetChanged()
     }
