@@ -14,7 +14,7 @@ class ReposListModel @Inject constructor(
     private val searchService: SearchService
 ) {
 
-    private val repositoryIdToTopContributorMap = HashMap<Int, Contributor>()
+    private val repositoryIdToTopContributorsMap = HashMap<Int, List<Contributor>>()
     private val repositoryRequestsInFlight = HashMap<Int, Boolean>()
 
     companion object {
@@ -25,9 +25,9 @@ class ReposListModel @Inject constructor(
         return searchService.repositories(searchQuery = TOP_REPOS_SORTED_BY_STARS_QUERY, perPageCount = 100)
     }
 
-    fun topContributorForRepository(repository: Repository): Single<Contributor> {
-        return if (repositoryIdToTopContributorMap.containsKey(repository.id)) {
-            Single.just(repositoryIdToTopContributorMap[repository.id])
+    fun topContributorsForRepository(repository: Repository): Single<List<Contributor>> {
+        return if (repositoryIdToTopContributorsMap.containsKey(repository.id)) {
+            Single.just(repositoryIdToTopContributorsMap[repository.id])
         } else {
             if (repositoryRequestsInFlight[repository.id] == true) {
                 // Don't make a new request if one is in flight
@@ -38,15 +38,15 @@ class ReposListModel @Inject constructor(
                     owner = repository.owner.login,
                     repo = repository.name)
                     .doAfterSuccess {
-                        // Cache the top contributor in the cache
-                        repositoryIdToTopContributorMap[repository.id] = it.first()
+                        // Cache the top contributors
+                        repositoryIdToTopContributorsMap[repository.id] = it
                     }
                     .doFinally {
                         repositoryRequestsInFlight[repository.id] = false
                     }
                     .flatMap {
-                        // Return only the top contributor
-                        Single.just(it.first())
+                        // Return all contributors
+                        Single.just(it)
                     }
             }
         }

@@ -112,11 +112,11 @@ class ReposListViewModel @Inject constructor(
                         Change.Error(it)
                     }
             }
-            is FetchTopContributorForRepository -> {
-                reposListModel.topContributorForRepository(intent.repository)
+            is FetchTopContributorsForRepository -> {
+                reposListModel.topContributorsForRepository(intent.repository)
                     .toObservable()
                     .map<ChangeOrEffect> {
-                        Effect.TopContributorLoaded(repositoryId = intent.repository.id, topContributor = it)
+                        Effect.TopContributorsLoaded(repositoryId = intent.repository.id, topContributors = it)
                     }
                     .onErrorReturn {
                         Effect.ErrorLoadingContributor(it)
@@ -176,7 +176,7 @@ class ReposListViewModel @Inject constructor(
  */
 sealed class Intent {
     object Startup: Intent()
-    data class FetchTopContributorForRepository(val repository: Repository): Intent()
+    data class FetchTopContributorsForRepository(val repository: Repository): Intent()
 }
 
 /*
@@ -190,7 +190,7 @@ sealed class ChangeOrEffect {
     }
 
     sealed class Effect: ChangeOrEffect() {
-        data class TopContributorLoaded(val repositoryId: Int, val topContributor: Contributor): Effect()
+        data class TopContributorsLoaded(val repositoryId: Int, val topContributors: List<Contributor>): Effect()
         data class ErrorLoadingContributor(val error: Throwable) : Effect()
     }
 }

@@ -18,7 +18,7 @@ import com.stevecc.topgithubrepos.api.search.Repository
 import com.stevecc.topgithubrepos.databinding.RepositoryListItemBinding
 import com.stevecc.topgithubrepos.databinding.TopReposListFragmentBinding
 import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect
-import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect.TopContributorLoaded
+import com.stevecc.topgithubrepos.reposlist.ChangeOrEffect.Effect.TopContributorsLoaded
 import com.stevecc.topgithubrepos.reposlist.Intent
 import com.stevecc.topgithubrepos.reposlist.ReposListViewModel
 import com.stevecc.topgithubrepos.reposlist.State
@@ -133,8 +133,8 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment),
      */
     private fun handleEffects(effect: Effect) {
         when (effect) {
-            is TopContributorLoaded -> {
-                repositoryAdapter.setTopContributor(effect.repositoryId, effect.topContributor)
+            is TopContributorsLoaded -> {
+                repositoryAdapter.setTopContributors(effect.repositoryId, effect.topContributors)
             }
             // TODO: handle error loading top contributor case (clear progress) - eg in case of rate limiting.
             else -> Unit
@@ -144,7 +144,7 @@ class ReposListFragment : Fragment(R.layout.top_repos_list_fragment),
 
 private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
     private val items: MutableList<Repository> = emptyList<Repository>().toMutableList()
-    private val topContributorsMap = emptyMap<Int, Contributor>().toMutableMap()
+    private val topContributorsMap = emptyMap<Int, List<Contributor>>().toMutableMap()
     private val repositoryIdToPositionMap = emptyMap<Int, Int>().toMutableMap()
 
     interface IntentsTarget {
@@ -172,12 +172,12 @@ private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): R
         if (topContributorsMap.containsKey(repository.id)) {
             holder.views.repositoryTopContributor.isVisible = true
             holder.views.repositoryTopContributorProgress.isVisible = false
-            holder.views.repositoryTopContributor.text = topContributorsMap[repository.id]!!.login
+            holder.views.repositoryTopContributor.text = topContributorsMap[repository.id]!!.first().login
         } else {
             holder.views.repositoryTopContributor.isVisible = false
             holder.views.repositoryTopContributorProgress.isVisible = true
             // Trigger a fetch of the top contributor for the repository
-            intentsTarget.onIntent(Intent.FetchTopContributorForRepository(repository))
+            intentsTarget.onIntent(Intent.FetchTopContributorsForRepository(repository))
         }
     }
 
@@ -198,8 +198,8 @@ private class RepositoryAdapter constructor(val intentsTarget: IntentsTarget): R
         notifyDataSetChanged()
     }
 
-    fun setTopContributor(repositoryId: Int, topContributor: Contributor) {
-        topContributorsMap[repositoryId] = topContributor
+    fun setTopContributors(repositoryId: Int, topContributors: List<Contributor>) {
+        topContributorsMap[repositoryId] = topContributors
         repositoryIdToPositionMap[repositoryId]?.let { notifyItemChanged(it) }
     }
 }
