@@ -70,9 +70,9 @@ dependencies {
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.12.0")
 
     // Hilt/Dagger for dependency injection
-    implementation("com.google.dagger:hilt-android:2.35.1")
+    implementation("com.google.dagger:hilt-android:2.36")
     implementation("androidx.navigation:navigation-ui-ktx:2.3.5")
-    kapt("com.google.dagger:hilt-compiler:2.35.1")
+    kapt("com.google.dagger:hilt-compiler:2.36")
 
     // RxJava3
     implementation("io.reactivex.rxjava3:rxjava:3.0.11")
